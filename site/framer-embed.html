@@ -1,0 +1,83 @@
+<!--
+  Cymate /report lead-magnet form — paste into a Framer "Embed" (HTML) element on the
+  cymate.io/report page. Replace INTAKE_URL with your deployed Vercel intake endpoint,
+  e.g. https://cymate-report-intake.vercel.app/api/intake
+-->
+<div id="cymate-report-form" style="font-family:'DM Sans',Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;">
+  <style>
+    #cymate-report-form * { box-sizing: border-box; }
+    #cymate-report-form .field { margin-bottom: 14px; }
+    #cymate-report-form label { display:block; font-size:13px; font-weight:700; color:#233362; margin-bottom:6px; }
+    #cymate-report-form input {
+      width:100%; padding:13px 14px; border:1px solid #d7dced; border-radius:10px;
+      font-size:15px; font-family:inherit; outline:none; color:#1b1b27; background:#fff;
+    }
+    #cymate-report-form input:focus { border-color:#FD5E02; box-shadow:0 0 0 3px rgba(253,94,2,0.16); }
+    #cymate-report-form button {
+      width:100%; margin-top:6px; padding:14px 18px; border:0; border-radius:10px; cursor:pointer;
+      font-family:'Inter Tight',Arial,sans-serif; font-size:15px; font-weight:700; color:#fff; background:#FD5E02;
+    }
+    #cymate-report-form button:disabled { opacity:.55; cursor:not-allowed; }
+    #cymate-report-form .note { font-size:12px; color:#5f5f71; margin-top:10px; line-height:1.5; }
+    #cymate-report-form .msg { margin-top:14px; font-size:14px; line-height:1.5; }
+    #cymate-report-form .ok { color:#1b7a3d; }
+    #cymate-report-form .err { color:#c0392b; }
+  </style>
+
+  <form id="cymate-form" novalidate>
+    <div class="field">
+      <label for="cy-email">Work email</label>
+      <input id="cy-email" name="email" type="email" placeholder="you@company.com" required />
+    </div>
+    <div class="field">
+      <label for="cy-website">Your company website</label>
+      <input id="cy-website" name="website" type="text" placeholder="yourcompany.com" required />
+    </div>
+    <button id="cy-submit" type="submit">Get my free signal report</button>
+    <div class="note">We'll research your market and email you a personalized high-intent signal report (it takes a little while — keep an eye on your inbox).</div>
+    <div id="cy-msg" class="msg" aria-live="polite"></div>
+  </form>
+
+  <script>
+    (function () {
+      var INTAKE_URL = "INTAKE_URL"; // <-- replace with your Vercel intake URL
+      var form = document.getElementById("cymate-form");
+      var btn = document.getElementById("cy-submit");
+      var msg = document.getElementById("cy-msg");
+      var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        msg.textContent = "";
+        msg.className = "msg";
+        var email = document.getElementById("cy-email").value.trim();
+        var website = document.getElementById("cy-website").value.trim();
+        if (!emailRe.test(email)) { msg.className = "msg err"; msg.textContent = "Please enter a valid work email."; return; }
+        if (!website) { msg.className = "msg err"; msg.textContent = "Please enter your company website."; return; }
+
+        btn.disabled = true; var label = btn.textContent; btn.textContent = "Sending…";
+        try {
+          var res = await fetch(INTAKE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email, website: website }),
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (res.ok) {
+            form.reset();
+            msg.className = "msg ok";
+            msg.textContent = data.message || "Thanks! Your report is on its way to your inbox.";
+          } else {
+            msg.className = "msg err";
+            msg.textContent = data.error || "Something went wrong. Please try again.";
+          }
+        } catch (err) {
+          msg.className = "msg err";
+          msg.textContent = "Network error. Please try again.";
+        } finally {
+          btn.disabled = false; btn.textContent = label;
+        }
+      });
+    })();
+  </script>
+</div>

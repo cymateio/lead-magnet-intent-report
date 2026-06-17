@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+site/.env
+.trigger/
+.vercel/
+*.log
+.DS_Store
+cloudflared.exe
+output/
+
+# Local Claude Code settings (settings.local.json embeds the AI-Ark token in its allowlist)
+.claude/
+
+# Local scratch files from manual API testing
+_ef.json
+_ef2.json
+aiark_ok.json
+
+# Local one-off debug script (hardcodes a local SA-key path + the founder's sheet id)
+_watch.ts
