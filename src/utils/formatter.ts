@@ -4,6 +4,7 @@ import {
   ResearchData,
   ResearchResponse,
 } from "../types";
+import { resolveDomain } from "./domainResolver";
 
 /**
  * Single source of truth for branding. Light theme (clean) with a dark-blue header,
@@ -250,6 +251,101 @@ function buildText(data: ResearchData, meta: Meta): string {
   lines.push(brand.ctaUrl);
 
   return lines.join("\n");
+}
+
+/* ----------------------- website-unreachable notice ----------------------- */
+
+/**
+ * Build a short, on-brand notice for the rare case where the website a lead entered
+ * does not resolve (likely a typo). Same visual shell as the report (logo header,
+ * orange CTA, gradient banner) but a single professional line instead of findings.
+ * Returns { html, text } ready for sendReportEmail. Keeps exactly one <img> so the
+ * mailer's inline-logo CID swap works unchanged.
+ */
+export function formatWebsiteNotice(enteredWebsite: string): { html: string; text: string } {
+  const shown = displayWebsite(enteredWebsite);
+  const headline = "We could not reach that website";
+  const message =
+    `It looks like the website you entered (${shown}) could not be reached, so it may contain a small typo. ` +
+    `Just reply to this email with the correct address and we will gladly run your personalized signal report right away.`;
+  return { html: buildNoticeHtml(headline, message), text: buildNoticeText(headline, message) };
+}
+
+function displayWebsite(raw: string): string {
+  try {
+    return resolveDomain(raw).domain;
+  } catch {
+    return (raw || "").trim().slice(0, 120) || "the address provided";
+  }
+}
+
+function buildNoticeHtml(headline: string, message: string): string {
+  const c = brand.colors;
+  const noticeBottom =
+    "Prefer to talk it through first? <a-link>Book a quick intro</a-link> and we will show you how we would run your outbound.";
+
+  const logoBlock = brand.logoUrl
+    ? `<img src="${esc(brand.logoUrl)}" alt="${esc(brand.name)}" height="40" style="display:inline-block;vertical-align:middle;border:0;outline:none;max-height:40px;" />`
+    : `<span style="font-family:${brand.fontHeading};font-size:24px;font-weight:700;letter-spacing:-0.5px;color:${c.headerText};">${esc(brand.name)}</span>`;
+
+  const bottomHtml = noticeBottom
+    .replace("<a-link>", `<a href="${esc(brand.ctaUrl)}" style="color:${c.primary};font-weight:700;text-decoration:underline;">`)
+    .replace("</a-link>", "</a>");
+
+  return `<!-- Signal Research Engine website-unreachable notice -->
+<div style="margin:0;padding:0;background:${c.page};font-family:${brand.fontBody};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${c.page};padding:0;margin:0;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:${c.card};border-radius:14px;overflow:hidden;border:1px solid ${c.border};">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:${c.headerBg};background:linear-gradient(135deg, ${c.dark} 0%, ${c.headerBg} 100%);padding:22px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="left" valign="middle">${logoBlock}</td>
+                  <td align="right" valign="middle">${ctaButton(brand.ctaTopLabel)}</td>
+                </tr>
+              </table>
+              <div style="font-family:${brand.fontHeading};font-size:22px;font-weight:700;color:${c.headerText};margin-top:20px;line-height:1.25;">${esc(headline)}</div>
+              <div style="font-family:${brand.fontBody};font-size:14px;color:${c.headerMuted};margin-top:4px;">About your signal report request</div>
+            </td>
+          </tr>
+
+          <!-- Message -->
+          <tr>
+            <td style="padding:24px 28px 8px 28px;">
+              <div style="font-family:${brand.fontBody};font-size:15px;color:${c.text};line-height:1.6;">${esc(message)}</div>
+            </td>
+          </tr>
+
+          <!-- Bottom CTA -->
+          <tr>
+            <td style="background:${c.headerBg};background:linear-gradient(135deg, ${c.dark} 0%, ${c.headerBg} 100%);padding:22px 28px;margin-top:8px;">
+              <div style="font-family:${brand.fontBody};font-size:15px;color:${c.headerText};line-height:1.55;">${bottomHtml}</div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>`;
+}
+
+function buildNoticeText(headline: string, message: string): string {
+  const rule = "=".repeat(60);
+  return [
+    `${brand.name.toUpperCase()}`,
+    rule,
+    headline.toUpperCase(),
+    "",
+    message,
+    "",
+    rule,
+    `Book a quick intro: ${brand.ctaUrl}`,
+  ].join("\n");
 }
 
 /* ----------------------------- helpers ----------------------------- */
