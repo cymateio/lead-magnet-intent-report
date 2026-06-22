@@ -264,11 +264,17 @@ function buildText(data: ResearchData, meta: Meta): string {
  */
 export function formatWebsiteNotice(enteredWebsite: string): { html: string; text: string } {
   const shown = displayWebsite(enteredWebsite);
+  const submitUrl = process.env.SUBMIT_URL || "https://cymate.io";
   const headline = "We could not reach that website";
+  // Neutral wording: works for both form submissions and campaign replies (no "you entered"
+  // or "reply again" assumptions). The CTA sends everyone to the website form to (re)submit.
   const message =
-    `It looks like the website you entered (${shown}) could not be reached, so it may contain a small typo. ` +
-    `Just reply to this email with the correct address and we will gladly run your personalized signal report right away.`;
-  return { html: buildNoticeHtml(headline, message), text: buildNoticeText(headline, message) };
+    `It looks like the website linked to your request (${shown}) could not be reached, so it may have a small typo. ` +
+    `Head to our website to submit the correct details and we will run your personalized signal report right away.`;
+  return {
+    html: buildNoticeHtml(headline, message, submitUrl),
+    text: buildNoticeText(headline, message, submitUrl),
+  };
 }
 
 function displayWebsite(raw: string): string {
@@ -279,7 +285,7 @@ function displayWebsite(raw: string): string {
   }
 }
 
-function buildNoticeHtml(headline: string, message: string): string {
+function buildNoticeHtml(headline: string, message: string, submitUrl: string): string {
   const c = brand.colors;
   const noticeBottom =
     "Prefer to talk it through first? <a-link>Book a quick intro</a-link> and we will show you how we would run your outbound.";
@@ -287,6 +293,8 @@ function buildNoticeHtml(headline: string, message: string): string {
   const logoBlock = brand.logoUrl
     ? `<img src="${esc(brand.logoUrl)}" alt="${esc(brand.name)}" height="40" style="display:inline-block;vertical-align:middle;border:0;outline:none;max-height:40px;" />`
     : `<span style="font-family:${brand.fontHeading};font-size:24px;font-weight:700;letter-spacing:-0.5px;color:${c.headerText};">${esc(brand.name)}</span>`;
+
+  const submitButton = `<a href="${esc(submitUrl)}" style="display:inline-block;background:${c.primary};color:${c.onPrimary};font-family:${brand.fontHeading};font-size:14px;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:8px;">Submit the correct website</a>`;
 
   const bottomHtml = noticeBottom
     .replace("<a-link>", `<a href="${esc(brand.ctaUrl)}" style="color:${c.primary};font-weight:700;text-decoration:underline;">`)
@@ -315,9 +323,14 @@ function buildNoticeHtml(headline: string, message: string): string {
 
           <!-- Message -->
           <tr>
-            <td style="padding:24px 28px 8px 28px;">
+            <td style="padding:24px 28px 6px 28px;">
               <div style="font-family:${brand.fontBody};font-size:15px;color:${c.text};line-height:1.6;">${esc(message)}</div>
             </td>
+          </tr>
+
+          <!-- Submit CTA -->
+          <tr>
+            <td style="padding:6px 28px 22px 28px;">${submitButton}</td>
           </tr>
 
           <!-- Bottom CTA -->
@@ -334,7 +347,7 @@ function buildNoticeHtml(headline: string, message: string): string {
 </div>`;
 }
 
-function buildNoticeText(headline: string, message: string): string {
+function buildNoticeText(headline: string, message: string, submitUrl: string): string {
   const rule = "=".repeat(60);
   return [
     `${brand.name.toUpperCase()}`,
@@ -342,6 +355,8 @@ function buildNoticeText(headline: string, message: string): string {
     headline.toUpperCase(),
     "",
     message,
+    "",
+    `Submit the correct website: ${submitUrl}`,
     "",
     rule,
     `Book a quick intro: ${brand.ctaUrl}`,
