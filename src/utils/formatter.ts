@@ -154,6 +154,13 @@ function buildHtml(data: ResearchData, meta: Meta): string {
             </td>
           </tr>
 
+          <!-- Unmonitored-inbox footer (on every outgoing email) -->
+          <tr>
+            <td style="padding:14px 28px 18px 28px;text-align:center;">
+              <div style="font-family:${brand.fontBody};font-size:11px;color:${c.muted};line-height:1.5;">This inbox is not monitored. For any inquiries, email us at <a href="mailto:admin@cymate.io" style="color:${c.link};text-decoration:underline;">admin@cymate.io</a>.</div>
+            </td>
+          </tr>
+
         </table>
       </td>
     </tr>
@@ -249,6 +256,8 @@ function buildText(data: ResearchData, meta: Meta): string {
   lines.push(rule);
   lines.push(`${brand.ctaBottomLink}${brand.ctaBottomRest}`);
   lines.push(brand.ctaUrl);
+  lines.push("");
+  lines.push("This inbox is not monitored. For any inquiries, email us at admin@cymate.io.");
 
   return lines.join("\n");
 }
@@ -340,6 +349,13 @@ function buildNoticeHtml(headline: string, message: string, submitUrl: string): 
             </td>
           </tr>
 
+          <!-- Unmonitored-inbox footer (on every outgoing email) -->
+          <tr>
+            <td style="padding:14px 28px 18px 28px;text-align:center;">
+              <div style="font-family:${brand.fontBody};font-size:11px;color:${c.muted};line-height:1.5;">This inbox is not monitored. For any inquiries, email us at <a href="mailto:admin@cymate.io" style="color:${c.link};text-decoration:underline;">admin@cymate.io</a>.</div>
+            </td>
+          </tr>
+
         </table>
       </td>
     </tr>
@@ -360,6 +376,8 @@ function buildNoticeText(headline: string, message: string, submitUrl: string): 
     "",
     rule,
     `Book a quick intro: ${brand.ctaUrl}`,
+    "",
+    "This inbox is not monitored. For any inquiries, email us at admin@cymate.io.",
   ].join("\n");
 }
 
